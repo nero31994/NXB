@@ -1,15 +1,6 @@
 import axios from "axios";
 
 export default async function handler(req, res) {
-  // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-    res.status(200).end();
-    return;
-  }
-
   const path = req.query.path;
   if (!path) {
     return res.status(400).send("Missing path");
@@ -22,8 +13,6 @@ export default async function handler(req, res) {
     const response = await axios.get(targetUrl, { responseType: "arraybuffer" });
 
     res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
     if (path.endsWith(".mpd")) {
       let mpdXml = response.data.toString();
@@ -31,10 +20,7 @@ export default async function handler(req, res) {
       const originalBase = "http://143.44.136.110:6910/";
       const proxyBase = `${req.headers["x-forwarded-proto"]}://${req.headers.host}/api/proxy?path=`;
 
-      mpdXml = mpdXml.replace(
-        new RegExp(originalBase, "g"),
-        proxyBase
-      );
+      mpdXml = mpdXml.replace(new RegExp(originalBase, "g"), proxyBase);
 
       res.setHeader("Content-Type", "application/dash+xml");
       return res.send(mpdXml);
@@ -46,4 +32,4 @@ export default async function handler(req, res) {
     console.error(error);
     return res.status(500).send("Proxy error");
   }
-}
+} 
